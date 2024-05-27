@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.css' rel='stylesheet' />
+  <link href="{{ url_for('static', filename='css/city_detail.css') }}" rel="stylesheet">
+  <title>{{ city.city_name }}</title>
+</head>
+<body>
+  {% include 'navbar.html' %}
+  <div class="container mt-3">
+    <div class="row">
+      <div class="col-md-12 text-center city-name">
+        <h1>{{ city.city_name }}</h1>
+        {% if average_rating %}
+        <h4>Average Rating: {{ average_rating }} / 5</h4>
+        {% endif %}
+      </div>
+    </div>
+    <div class="row city-image-container">
+      <div class="col-md-6">
+        <img id="cityImage" src="{{ city.image_url }}" alt="Şehir Resmi" class="img-fluid hotel-image">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12 text-center mx-auto">
+        <div class="explore-info">
+          <h4>Description</h4>
+          <p>{{ city.city_description }}</p>
+        </div>
+      </div>
+    </div>
+    <hr>
+    <div class="row">
+      <div class="col-md-12 text-center">
+        <h4>Current Weather</h4>
+        <hr class="my-4">
+        {% if weather %}
+        <div class="row justify-content-center align-items-center">
+          <div class="col-md-3">
+            {% if weather.weather[0].main == 'Clear' %}
+              <i class="fas fa-sun fa-5x text-warning"></i> <!-- Açık hava için güneş ikonu -->
+            {% elif weather.weather[0].main == 'Clouds' %}
+              {% if weather.weather[0].description == 'few clouds' %}
+                <i class="fas fa-cloud-sun fa-5x text-secondary"></i> <!-- Az bulutlu hava için güneşli bulut ikonu -->
+              {% elif weather.weather[0].description == 'scattered clouds' %}
+                <i class="fas fa-cloud fa-5x text-secondary"></i> <!-- Dağınık bulutlu hava için bulut ikonu -->
+              {% elif weather.weather[0].description == 'broken clouds' %}
+                <i class="fas fa-cloud-sun-rain fa-5x text-secondary"></i> <!-- Parçalı bulutlu hava için yağmurlu bulut ve güneş ikonu -->
+              {% elif weather.weather[0].description == 'overcast clouds' %}
+                <i class="fas fa-cloud-meatball fa-5x text-secondary"></i> <!-- Kapalı bulutlu hava için kalın bulut ikonu -->
+              {% else %}
+                <i class="fas fa-cloud fa-5x text-secondary"></i> <!-- Diğer bulutlu hava durumları için genel bulut ikonu -->
+              {% endif %}
+            {% elif weather.weather[0].main == 'Rain' %}
+              <i class="fas fa-cloud-showers-heavy fa-5x text-primary"></i> <!-- Yağmurlu hava için yağmurlu bulut ikonu -->
+            {% elif weather.weather[0].main == 'Snow' %}
+              <i class="fas fa-snowflake fa-5x text-info"></i> <!-- Karlı hava için kar tanesi ikonu -->
+            {% elif weather.weather[0].main == 'Thunderstorm' %}
+              <i class="fas fa-bolt fa-5x text-warning"></i> <!-- Fırtınalı hava için yıldırım ikonu -->
+            {% elif weather.weather[0].main == 'Drizzle' %}
+              <i class="fas fa-cloud-rain fa-5x text-primary"></i> <!-- Çiseli hava için yağmurlu bulut ikonu -->
+            {% elif weather.weather[0].main == 'Fog' or weather.weather[0].main == 'Mist' %}
+              <i class="fas fa-smog fa-5x text-muted"></i> <!-- Sisli hava için sis ikonu -->
+            {% else %}
+              <i class="fas fa-cloud-sun fa-5x text-secondary"></i> <!-- Diğer hava durumları için güneşli bulut ikonu -->
+            {% endif %}
+          </div>
+          <div class="col-md-9">
+            <div class="row">
+              <div class="col-md-6">
+                <p>Temperature: {{ weather.main.temp }}°C</p>
+              </div>
+              <div class="col-md-6">
+                <p>Weather: {{ weather.weather[0].description }}</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <p>Humidity: {{ weather.main.humidity }}%</p>
+              </div>
+              <div class="col-md-6">
+                <p>Wind Speed: {{ weather.wind.speed }} m/s</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <p>Weather data not available.</p>
+        {% endif %}
+      </div>
+    </div>
+    <hr class="my-4">
+    
+    
+    <div class="accordion" id="accordionExample">
+      <!-- Cultural Places -->
+      <div class="card">
+        <div class="card-header" id="headingOne">
+          <h2 class="mb-0">
+            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+              Cultural Places
+            </button>
+          </h2>
+        </div>
+        <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordionExample">
+          <div class="card-body">
+            {% if city.cultural_places %}
+            <ul>
+              {% for cultural_place in city.cultural_places.split('\n') %}
+                <li>{{ cultural_place }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bars -->
+      <div class="card">
+        <div class="card-header" id="headingTwo">
+          <h2 class="mb-0">
+            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+              Bars
+            </button>
+          </h2>
+        </div>
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+          <div class="card-body">
+            {% if city.bars %}
+            <ul>
+              {% for bar in city.bars.split('\n') %}
+                <li>{{ bar }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Touristic Places -->
+      <div class="card">
+        <div class="card-header" id="headingThree">
+          <h2 class="mb-0">
+            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+              Touristic Places
+            </button>
+          </h2>
+        </div>
+        <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordionExample">
+          <div class="card-body">
+            {% if city.tourist_attractions %}
+            <ul>
+              {% for tourist_attraction in city.tourist_attractions.split('\n') %}
+                <li>{{ tourist_attraction }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Restaurants -->
+      <div class="card">
+        <div class="card-header" id="headingFour">
+          <h2 class="mb-0">
+            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+              Restaurants
+            </button>
+          </h2>
+        </div>
+        <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#accordionExample">
+          <div class="card-body">
+            {% if city.restaurants %}
+            <ul>
+              {% for restaurant in city.restaurants.split('\n') %}
+                <li>{{ restaurant }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Transportation -->
+      <div class="card">
+        <div class="card-header" id="headingFive">
+          <h2 class="mb-0">
+            <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+              Transportation
+            </button>
+          </h2>
+        </div>
+        <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#accordionExample">
+          <div class="card-body">
+            {% if city.transportation %}
+            <ul>
+              {% for transportation in city.transportation.split('\n') %}
+                <li>{{ transportation }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+<!-- Places of Interest Section -->
+<div class="card">
+  <div class="card-header" id="headingSeven">
+    <h2 class="mb-0">
+      <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven" data-parent="#accordionExample">
+        Places of Interest
+      </button>
+    </h2>
+  </div>
+  <div id="collapseSeven" class="collapse" aria-labelledby="headingSeven" data-parent="#accordionExample">
+    <div class="card-body">
+      {% if city.places_of_interest %}
+      <ul>
+        {% for place_of_interest in city.places_of_interest.split('\n') %}
+          <li>{{ place_of_interest }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+<!-- Accommodation Section -->
+<div class="card">
+  <div class="card-header" id="headingEight">
+    <h2 class="mb-0">
+      <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseEight" aria-expanded="false" aria-controls="collapseEight" data-parent="#accordionExample">
+        Accommodation
+      </button>
+    </h2>
+  </div>
+  <div id="collapseEight" class="collapse" aria-labelledby="headingEight" data-parent="#accordionExample">
+    <div class="card-body">
+      <p>For accommodation suggestions, you can consider the following options:</p>
+      {% if city.accommodation %}
+      <ul>
+        {% for place in city.accommodation.split('\n') %}
+          <li>{{ place }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+      
+    </div>
+    
+    <!-- Accommodation Section -->
+    <hr>
+    <div id="Accommodation" class="row">
+      <div class="col-md-8">
+        <div class="explore-info">
+          <p>Alternatively, you can search for places to stay in {{ city.city_name }} on Trivago using the link below:</p>
+          <a href="{{ city.trivago_link }}" target="_blank" class="btn btn-primary">Search for Accommodation</a>
+        </div>
+      </div>
+    </div>
+    
+    <div class="container mt-3">
+      <div data-bs-spy="scroll" id="Comments" class="row scrollspy-example">
+        <div class="col-md-12 text-center">
+          <h2>Comments</h2>
+          {% for comment in comments %}
+          <div class="comment">
+            <p><strong>{{ comment.user.name }}</strong>: {{ comment.text }}</p>
+            <p>Rating: {{ comment.rating }} / 5</p>
+            {% if comment.photo_url %}
+            <img src="{{ comment.photo_url }}" alt="Comment Photo" style="max-width: 200px; max-height: 200px;">
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div id="AddComment" class="row">
+        <div class="col-md-12 text-center">
+          <h2>Add a Comment</h2>
+          <form method="post" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+              {{ form.comment_text.label(class="form-label") }}
+              {{ form.comment_text(class="form-control") }}
+            </div>
+            <div class="form-group">
+              {{ form.photo.label(class="form-label") }}
+              {{ form.photo(class="form-control") }}
+            </div>
+            <div class="form-group">
+              {{ form.rating.label(class="form-label") }}
+              {{ form.rating(class="form-control") }}
+            </div>
+            <div class="form-group">
+              {{ form.submit(class="btn btn-primary") }}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="harita-container" class="row">
+  <div class="col-md-12 text-center">
+    <h4>Harita</h4>
+    <div id="map" style="height: 500px;">
+      Harita yükleniyor...
+    </div>
+  </div>
+  <button id="showRouteButton" class="btn btn-primary">Rota Göster</button>
+</div>
+</div>
+
+{% include 'footer.html' %}
+
+<script src='https://api.mapbox.com/mapbox-gl-js/v2.10.0/mapbox-gl.js'></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1Ijoic2V6YWkzNSIsImEiOiJjbHdub3Q2cjAxdW5wMmpteTdtZ2htcDVwIn0.Tt6d8m6LRzkeavcYQ_AGYw';
+
+  function initMap() {
+    const cityLat = parseFloat('{{ city.latitude }}');
+    const cityLng = parseFloat('{{ city.longitude }}');
+
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [cityLng, cityLat],
+      zoom: 12
+    });
+
+    new mapboxgl.Marker()
+    .setLngLat([cityLng, cityLat])
+    .setPopup(new mapboxgl.Popup({ offset: 25 }).setText('{{ city.city_name }}'))
+    .addTo(map);
+
+
+    document.getElementById('showRouteButton').addEventListener('click', function() {
+    const cityLat = parseFloat('{{ city.latitude }}');
+    const cityLng = parseFloat('{{ city.longitude }}');
+    
+    const numberOfPoints = 3; // İşaretlenecek nokta sayısı
+    const maxOffset = 0.02; // Noktaların maksimum konum ofseti
+    
+for (let i = 0; i < numberOfPoints; i++) {
+    const randomLng = cityLng + (Math.random() - 0.5) * maxOffset;
+    const randomLat = cityLat + (Math.random() - 0.5) * maxOffset;
+
+    const marker = new mapboxgl.Marker()
+        .setLngLat([randomLng, randomLat])
+        .addTo(map);
+
+    // Rastgele mekan ismini işaretin üzerine ekle
+    const randomIndex = Math.floor(Math.random() * placeNames.length);
+    const placeName = placeNames[randomIndex];
+    const popup = new mapboxgl.Popup({ offset: 25 }).setText(placeName);
+    marker.setPopup(popup);
+}
+
+});
+
+  }
+
+  document.addEventListener('DOMContentLoaded', initMap);
+</script>
+</body>
+</html>
